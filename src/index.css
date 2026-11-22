@@ -1,4 +1,3 @@
-
 @import "tailwindcss";
 
 :root {
@@ -59,7 +58,9 @@ button {
   top: 9%;
   right: 13%;
   background: radial-gradient(circle at 35% 35%, #ffb9ff, #bc50ed 55%, #7025a5);
-  box-shadow: 0 0 50px #c42cff99, 0 0 120px #a326ff55;
+  box-shadow:
+    0 0 50px #c42cff99,
+    0 0 120px #a326ff55;
   opacity: 0.8;
 }
 
@@ -91,16 +92,42 @@ button {
   background-image:
     linear-gradient(90deg, transparent 20%, #12caff 20.5%, transparent 22%),
     linear-gradient(90deg, #170d46 0 75%, #31115c 75% 100%);
-  background-size: 90px 100%, 90px 100%;
+  background-size:
+    90px 100%,
+    90px 100%;
   clip-path: polygon(
-    0 35%, 5% 35%, 5% 15%, 11% 15%, 11% 40%,
-    17% 40%, 17% 5%, 23% 5%, 23% 30%,
-    29% 30%, 29% 20%, 36% 20%, 36% 45%,
-    43% 45%, 43% 10%, 50% 10%, 50% 36%,
-    57% 36%, 57% 17%, 64% 17%, 64% 42%,
-    72% 42%, 72% 0, 79% 0, 79% 38%,
-    86% 38%, 86% 15%, 94% 15%, 94% 40%,
-    100% 40%, 100% 100%, 0 100%
+    0 35%,
+    5% 35%,
+    5% 15%,
+    11% 15%,
+    11% 40%,
+    17% 40%,
+    17% 5%,
+    23% 5%,
+    23% 30%,
+    29% 30%,
+    29% 20%,
+    36% 20%,
+    36% 45%,
+    43% 45%,
+    43% 10%,
+    50% 10%,
+    50% 36%,
+    57% 36%,
+    57% 17%,
+    64% 17%,
+    64% 42%,
+    72% 42%,
+    72% 0,
+    79% 0,
+    79% 38%,
+    86% 38%,
+    86% 15%,
+    94% 15%,
+    94% 40%,
+    100% 40%,
+    100% 100%,
+    0 100%
   );
 }
 
@@ -117,12 +144,30 @@ button {
     ),
     linear-gradient(180deg, #1b1050, #09051b);
   clip-path: polygon(
-    0 25%, 8% 25%, 8% 0, 16% 0, 16% 40%,
-    25% 40%, 25% 12%, 34% 12%, 34% 35%,
-    42% 35%, 42% 5%, 51% 5%, 51% 30%,
-    61% 30%, 61% 0, 70% 0, 70% 36%,
-    80% 36%, 80% 15%, 90% 15%, 90% 40%,
-    100% 40%, 100% 100%, 0 100%
+    0 25%,
+    8% 25%,
+    8% 0,
+    16% 0,
+    16% 40%,
+    25% 40%,
+    25% 12%,
+    34% 12%,
+    34% 35%,
+    42% 35%,
+    42% 5%,
+    51% 5%,
+    51% 30%,
+    61% 30%,
+    61% 0,
+    70% 0,
+    70% 36%,
+    80% 36%,
+    80% 15%,
+    90% 15%,
+    90% 40%,
+    100% 40%,
+    100% 100%,
+    0 100%
   );
 }
 
@@ -131,7 +176,13 @@ button {
   z-index: -1;
   height: 2px;
   width: 100%;
-  background: linear-gradient(90deg, transparent, #00eaff, #f000ff, transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    #00eaff,
+    #f000ff,
+    transparent
+  );
   box-shadow: 0 0 18px #00d9ff;
   opacity: 0.7;
 }
@@ -395,7 +446,9 @@ button {
   padding: 38px 28px;
   background: #100b2d;
   border: 1px solid #00eaff;
-  box-shadow: 0 0 35px #00eaff44, 0 0 80px #c000ff33;
+  box-shadow:
+    0 0 35px #00eaff44,
+    0 0 80px #c000ff33;
   border-radius: 12px;
   animation: modalEnter 0.25s ease-out;
 }
@@ -447,23 +500,42 @@ button {
 }
 
 @keyframes titleGlow {
-  from { filter: brightness(0.9); }
-  to { filter: brightness(1.3); }
+  from {
+    filter: brightness(0.9);
+  }
+  to {
+    filter: brightness(1.3);
+  }
 }
 
 @keyframes characterFloat {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-12px); }
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-12px);
+  }
 }
 
 @keyframes starsMove {
-  from { background-position: 0 0; }
-  to { background-position: 220px 180px; }
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: 220px 180px;
+  }
 }
 
 @keyframes modalEnter {
-  from { opacity: 0; transform: translateY(15px) scale(0.96); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
+  from {
+    opacity: 0;
+    transform: translateY(15px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 @media (max-width: 700px) {
