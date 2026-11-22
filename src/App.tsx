@@ -1,9 +1,16 @@
 import { useState } from "react";
+import NeonGame from "./game/NeonGame";
 
 type Panel = "settings" | "leaderboard" | "about" | null;
 
 function App() {
   const [panel, setPanel] = useState<Panel>(null);
+
+  const [screen, setScreen] = useState<"menu" | "game">("menu");
+
+  if (screen === "game") {
+    return <NeonGame onExit={() => setScreen("menu")} />;
+  }
 
   return (
     <main className="main-menu">
@@ -28,7 +35,10 @@ function App() {
         </div>
 
         <div className="menu-buttons">
-          <button className="menu-btn play-btn" onClick={() => setPanel(null)}>
+          <button
+            className="menu-btn play-btn"
+            onClick={() => setScreen("game")}
+          >
             <span>▶</span>
             PLAY NOW
           </button>
