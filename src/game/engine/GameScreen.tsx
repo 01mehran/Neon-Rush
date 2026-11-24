@@ -3,6 +3,16 @@ import { useCallback, useEffect, useRef, useState } from "react";
 const WIDTH = 900;
 const HEIGHT = 500;
 const GROUND = 420;
+const HIGH_SCORE_KEY = "neon-rush-high-score";
+
+function getSavedHighScore() {
+  try {
+    const saved = Number(window.localStorage.getItem(HIGH_SCORE_KEY));
+    return Number.isFinite(saved) && saved > 0 ? saved : 0;
+  } catch {
+    return 0;
+  }
+}
 
 type Obstacle = {
   x: number;
@@ -21,7 +31,12 @@ function GameScreen({ onExit }: { onExit: () => void }) {
 
   const [score, setScore] = useState(0);
   const [coins, setCoins] = useState(0);
+  const [highScore, setHighScore] = useState(getSavedHighScore);
+  const highScoreRef = useRef(highScore);
   const [gameOver, setGameOver] = useState(false);
+
+  // Keep the ref in sync so the animation loop always sees the latest record.
+  highScoreRef.current = highScore;
 
   const game = useRef({
     player: {
@@ -421,6 +436,21 @@ function GameScreen({ onExit }: { onExit: () => void }) {
         if (uiTimer >= 0.1) {
           setScore(current.score);
           setCoins(current.coinsCollected);
+
+          if (current.score > highScoreRef.current) {
+            highScoreRef.current = current.score;
+            setHighScore(current.score);
+
+            try {
+              window.localStorage.setItem(
+                HIGH_SCORE_KEY,
+                String(current.score),
+              );
+            } catch {
+              // The game can continue even if browser storage is unavailable.
+            }
+          }
+
           uiTimer = 0;
         }
       }
@@ -467,6 +497,7 @@ function GameScreen({ onExit }: { onExit: () => void }) {
         <div className="game-stats">
           <span>SCORE: {score}</span>
           <span>COINS: {coins}</span>
+          <span>BEST: {highScore}</span>
         </div>
       </header>
 
@@ -501,6 +532,7 @@ function GameScreen({ onExit }: { onExit: () => void }) {
             <span>RUN ENDED</span>
             <h2>GAME OVER</h2>
             <p>YOUR SCORE: {score}</p>
+            <p>BEST SCORE: {highScore}</p>
 
             <button onClick={restart}>PLAY AGAIN ↻</button>
 

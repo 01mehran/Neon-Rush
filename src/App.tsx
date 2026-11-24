@@ -1,7 +1,8 @@
 import { useState } from "react";
 import NeonGame from "./game/NeonGame";
-import GameScreen from "./game/engine/GameScreen";
+
 import "./game/engine/game.css";
+import GameScreen from "./game/engine/GameScreen";
 
 type Panel = "settings" | "leaderboard" | "about" | null;
 
