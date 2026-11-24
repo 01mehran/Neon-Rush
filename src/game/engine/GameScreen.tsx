@@ -26,6 +26,12 @@ type Coin = {
   collected: boolean;
 };
 
+type PowerUp = {
+  x: number;
+  y: number;
+  type: "shield" | "magnet";
+};
+
 function GameScreen({ onExit }: { onExit: () => void }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -33,6 +39,8 @@ function GameScreen({ onExit }: { onExit: () => void }) {
   const [coins, setCoins] = useState(0);
   const [highScore, setHighScore] = useState(getSavedHighScore);
   const [paused, setPaused] = useState(false);
+  const [shieldTime, setShieldTime] = useState(0);
+  const [magnetTime, setMagnetTime] = useState(0);
   const highScoreRef = useRef(highScore);
   const [gameOver, setGameOver] = useState(false);
 
@@ -50,6 +58,10 @@ function GameScreen({ onExit }: { onExit: () => void }) {
     },
     obstacles: [] as Obstacle[],
     coins: [] as Coin[],
+    powerUps: [] as PowerUp[],
+    powerUpTimer: 7,
+    shieldTime: 0,
+    magnetTime: 0,
     speed: 340,
     distance: 0,
     score: 0,
@@ -92,6 +104,10 @@ function GameScreen({ onExit }: { onExit: () => void }) {
       },
       obstacles: [],
       coins: [],
+      powerUps: [],
+      powerUpTimer: 7,
+      shieldTime: 0,
+      magnetTime: 0,
       speed: 340,
       distance: 0,
       score: 0,
@@ -106,6 +122,8 @@ function GameScreen({ onExit }: { onExit: () => void }) {
 
     setScore(0);
     setCoins(0);
+    setShieldTime(0);
+    setMagnetTime(0);
     setGameOver(false);
     setPaused(false);
   }, []);
@@ -274,6 +292,28 @@ function GameScreen({ onExit }: { onExit: () => void }) {
       ctx.restore();
     };
 
+    const drawPowerUp = (powerUp: PowerUp) => {
+      ctx.save();
+      const isShield = powerUp.type === "shield";
+      const color = isShield ? "#00eaff" : "#ff4de1";
+      ctx.shadowBlur = 22;
+      ctx.shadowColor = color;
+      ctx.fillStyle = "#100b2c";
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.arc(powerUp.x, powerUp.y, 17, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = color;
+      ctx.font = "bold 18px Arial";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(isShield ? "S" : "M", powerUp.x, powerUp.y + 1);
+      ctx.restore();
+    };
+
     const drawCoin = (coin: Coin) => {
       if (coin.collected) return;
 
@@ -300,7 +340,28 @@ function GameScreen({ onExit }: { onExit: () => void }) {
       drawBackground(current.distance);
 
       current.coins.forEach(drawCoin);
+      current.powerUps.forEach(drawPowerUp);
       current.obstacles.forEach(drawObstacle);
+
+      if (current.shieldTime > 0) {
+        ctx.save();
+        ctx.strokeStyle = "#00eaff";
+        ctx.lineWidth = 3;
+        ctx.shadowBlur = 24;
+        ctx.shadowColor = "#00eaff";
+        ctx.beginPath();
+        ctx.ellipse(
+          player.x + player.width / 2,
+          player.y + player.height / 2,
+          player.width * 0.9,
+          player.height * 0.72,
+          0,
+          0,
+          Math.PI * 2,
+        );
+        ctx.stroke();
+        ctx.restore();
+      }
 
       drawPlayer(player.x, player.y, player.width, player.height);
 
@@ -394,6 +455,21 @@ function GameScreen({ onExit }: { onExit: () => void }) {
           current.coinTimer = 1.3 + Math.random() * 1.2;
         }
 
+        // Power-up timers
+        current.shieldTime = Math.max(0, current.shieldTime - delta);
+        current.magnetTime = Math.max(0, current.magnetTime - delta);
+
+        // Spawn power-ups
+        current.powerUpTimer -= delta;
+        if (current.powerUpTimer <= 0) {
+          current.powerUps.push({
+            x: WIDTH + 25,
+            y: GROUND - 75 - Math.random() * 75,
+            type: Math.random() < 0.5 ? "shield" : "magnet",
+          });
+          current.powerUpTimer = 10 + Math.random() * 5;
+        }
+
         // Move obstacles
         current.obstacles.forEach((obstacle) => {
           obstacle.x -= current.speed * delta;
@@ -403,13 +479,46 @@ function GameScreen({ onExit }: { onExit: () => void }) {
           (obstacle) => obstacle.x + obstacle.width > 0,
         );
 
-        // Move coins
+        // Move power-ups
+        current.powerUps.forEach((powerUp) => {
+          powerUp.x -= current.speed * delta;
+        });
+        current.powerUps = current.powerUps.filter(
+          (powerUp) => powerUp.x > -30,
+        );
+
+        // Move coins and attract them while the magnet is active
         current.coins.forEach((coin) => {
           coin.x -= current.speed * delta;
+
+          if (current.magnetTime > 0 && !coin.collected) {
+            const targetX = player.x + player.width / 2;
+            const targetY = player.y + player.height / 2;
+            const dx = targetX - coin.x;
+            const dy = targetY - coin.y;
+            if (Math.hypot(dx, dy) < 190) {
+              coin.x += dx * Math.min(1, delta * 5);
+              coin.y += dy * Math.min(1, delta * 5);
+            }
+          }
         });
 
         current.coins = current.coins.filter(
           (coin) => coin.x > -20 && !coin.collected,
+        );
+
+        // Collect power-ups
+        for (const powerUp of current.powerUps) {
+          const dx = player.x + player.width / 2 - powerUp.x;
+          const dy = player.y + player.height / 2 - powerUp.y;
+          if (Math.hypot(dx, dy) < 42) {
+            if (powerUp.type === "shield") current.shieldTime = 5;
+            else current.magnetTime = 6;
+            powerUp.x = -100;
+          }
+        }
+        current.powerUps = current.powerUps.filter(
+          (powerUp) => powerUp.x > -30,
         );
 
         // Collision detection
@@ -424,7 +533,7 @@ function GameScreen({ onExit }: { onExit: () => void }) {
             player.x + 7 < obstacle.x + obstacle.width &&
             playerBottom > obstacleTop + 3;
 
-          if (hit) {
+          if (hit && current.shieldTime <= 0) {
             current.running = false;
             current.gameOver = true;
             current.paused = false;
@@ -451,6 +560,8 @@ function GameScreen({ onExit }: { onExit: () => void }) {
         if (uiTimer >= 0.1) {
           setScore(current.score);
           setCoins(current.coinsCollected);
+          setShieldTime(current.shieldTime);
+          setMagnetTime(current.magnetTime);
 
           if (current.score > highScoreRef.current) {
             highScoreRef.current = current.score;
@@ -518,6 +629,16 @@ function GameScreen({ onExit }: { onExit: () => void }) {
           <span>SCORE: {score}</span>
           <span>COINS: {coins}</span>
           <span>BEST: {highScore}</span>
+          {shieldTime > 0 && (
+            <span className="text-cyan-300">
+              SHIELD: {shieldTime.toFixed(1)}s
+            </span>
+          )}
+          {magnetTime > 0 && (
+            <span className="text-fuchsia-300">
+              MAGNET: {magnetTime.toFixed(1)}s
+            </span>
+          )}
           {!gameOver && (
             <button
               type="button"
@@ -569,7 +690,7 @@ function GameScreen({ onExit }: { onExit: () => void }) {
         )}
 
         <div className="game-controls">
-          <span>SPACE / ↑ / W TO JUMP</span>
+          <span>SPACE / ↑ / W TO JUMP · COLLECT S / M ORBS</span>
           <button
             onPointerDown={(e) => {
               e.preventDefault();
