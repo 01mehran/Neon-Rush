@@ -32,6 +32,7 @@ function GameScreen({ onExit }: { onExit: () => void }) {
   const [score, setScore] = useState(0);
   const [coins, setCoins] = useState(0);
   const [highScore, setHighScore] = useState(getSavedHighScore);
+  const [paused, setPaused] = useState(false);
   const highScoreRef = useRef(highScore);
   const [gameOver, setGameOver] = useState(false);
 
@@ -58,15 +59,25 @@ function GameScreen({ onExit }: { onExit: () => void }) {
     running: true,
     lastTime: 0,
     gameOver: false,
+    paused: false,
   });
 
   const jump = useCallback(() => {
     const current = game.current;
 
-    if (!current.running || !current.player.grounded) return;
+    if (!current.running || current.paused || !current.player.grounded) return;
 
     current.player.velocityY = -680;
     current.player.grounded = false;
+  }, []);
+
+  const togglePause = useCallback(() => {
+    const current = game.current;
+
+    if (!current.running || current.gameOver) return;
+
+    current.paused = !current.paused;
+    setPaused(current.paused);
   }, []);
 
   const restart = useCallback(() => {
@@ -90,11 +101,13 @@ function GameScreen({ onExit }: { onExit: () => void }) {
       running: true,
       lastTime: 0,
       gameOver: false,
+      paused: false,
     };
 
     setScore(0);
     setCoins(0);
     setGameOver(false);
+    setPaused(false);
   }, []);
 
   useEffect(() => {
@@ -334,7 +347,7 @@ function GameScreen({ onExit }: { onExit: () => void }) {
 
       previousTime = time;
 
-      if (current.running) {
+      if (current.running && !current.paused) {
         const player = current.player;
 
         current.distance += current.speed * delta;
@@ -414,6 +427,8 @@ function GameScreen({ onExit }: { onExit: () => void }) {
           if (hit) {
             current.running = false;
             current.gameOver = true;
+            current.paused = false;
+            setPaused(false);
             setGameOver(true);
             break;
           }
@@ -475,6 +490,11 @@ function GameScreen({ onExit }: { onExit: () => void }) {
         jump();
       }
 
+      if (event.code === "KeyP" && !event.repeat) {
+        event.preventDefault();
+        togglePause();
+      }
+
       if (event.code === "Escape") {
         onExit();
       }
@@ -485,7 +505,7 @@ function GameScreen({ onExit }: { onExit: () => void }) {
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [jump, onExit]);
+  }, [jump, onExit, togglePause]);
 
   return (
     <main className="game-screen">
@@ -498,10 +518,19 @@ function GameScreen({ onExit }: { onExit: () => void }) {
           <span>SCORE: {score}</span>
           <span>COINS: {coins}</span>
           <span>BEST: {highScore}</span>
+          {!gameOver && (
+            <button
+              type="button"
+              onClick={togglePause}
+              className="rounded-lg border border-cyan-400/50 bg-slate-950/70 px-3 py-2 text-xs font-bold tracking-wider text-cyan-300 transition hover:bg-cyan-400/15"
+            >
+              {paused ? "RESUME" : "PAUSE"}
+            </button>
+          )}
         </div>
       </header>
 
-      <section className="game-container">
+      <section className="game-container relative">
         <div className="game-title">
           <span>NEON RUSH</span>
           <p>RUN. DODGE. SURVIVE.</p>
@@ -514,6 +543,30 @@ function GameScreen({ onExit }: { onExit: () => void }) {
           className="game-canvas"
           onPointerDown={jump}
         />
+
+        {paused && !gameOver && (
+          <div className="absolute inset-0 z-20 grid place-items-center bg-[#05030dcc] p-4 backdrop-blur-sm">
+            <div className="w-full max-w-sm rounded-2xl border border-cyan-400/40 bg-[#0b0820]/95 p-8 text-center shadow-[0_0_35px_rgba(0,234,255,0.15)]">
+              <p className="mb-2 text-xs font-bold tracking-[0.35em] text-cyan-300">
+                NEON RUSH
+              </p>
+              <h2 className="mb-3 text-4xl font-black tracking-widest text-white">
+                PAUSED
+              </h2>
+              <p className="mb-6 text-sm text-slate-400">
+                Take a break. Your run is waiting.
+              </p>
+              <button
+                type="button"
+                onClick={togglePause}
+                className="w-full rounded-lg bg-cyan-400 px-6 py-3 font-black tracking-widest text-slate-950 transition hover:bg-cyan-300"
+              >
+                RESUME GAME
+              </button>
+              <p className="mt-4 text-xs text-slate-500">Press P to resume</p>
+            </div>
+          </div>
+        )}
 
         <div className="game-controls">
           <span>SPACE / ↑ / W TO JUMP</span>
