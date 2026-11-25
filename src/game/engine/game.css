@@ -1,23 +1,37 @@
 .game-screen {
-  min-height: 100svh;
-  padding: 25px;
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  min-height: 0;
+  padding: 12px;
+  overflow: hidden;
+  box-sizing: border-box;
   background:
     radial-gradient(ellipse at 50% 45%, #26104a, transparent 65%), #05030d;
   color: white;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: stretch;
+  gap: 10px;
 }
 
 .game-header {
-  width: min(100%, 1100px);
+  flex: 0 0 auto;
+  width: 100%;
+  min-height: 56px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 45px;
+  gap: 12px;
+  margin: 0;
+  /* margin-bottom: 3rem; */
 }
 
 .game-exit {
+  flex: 0 0 auto;
   background: transparent;
   border: 1px solid #00eaff;
   color: #00eaff;
@@ -28,21 +42,31 @@
 }
 
 .game-stats {
+  min-width: 0;
   display: flex;
-  gap: 25px;
+  flex-wrap: wrap;
+  gap: 12px 22px;
   color: #00eaff;
   font-size: 13px;
   font-weight: bold;
   letter-spacing: 2px;
-  justify-content: center;
+  justify-content: flex-end;
   align-items: center;
 }
 
 .game-container {
   position: relative;
-  width: min(100%, 1050px);
-  margin: auto;
-  padding: 20px;
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  width: 100%;
+  margin: 0;
+  padding: 10px;
+  box-sizing: border-box;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: 8px;
+  overflow: hidden;
   border: 1px solid #7532a9;
   background: #0d0820;
   box-shadow: 0 0 40px #a000ff22;
@@ -51,7 +75,8 @@
 
 .game-title {
   text-align: center;
-  margin-bottom: 20px;
+  margin: 0;
+  line-height: 1.1;
 }
 
 .game-title span {
@@ -66,23 +91,27 @@
   color: #b84bff;
   font-size: 10px;
   letter-spacing: 4px;
+  margin: 5px 0 0;
 }
 
 .game-canvas {
   display: block;
   width: 100%;
-  height: auto;
-  aspect-ratio: 9 / 5;
-  border: 1px solid #00eaff66;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  aspect-ratio: auto;
   border-radius: 5px;
   touch-action: none;
 }
 
 .game-controls {
+  min-height: 30px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 18px 5px 0;
+  gap: 10px;
+  padding: 2px 5px 0;
   color: #a89abf;
   font-size: 11px;
   letter-spacing: 2px;
@@ -90,6 +119,7 @@
 
 .game-controls button {
   display: none;
+  flex: 0 0 auto;
   padding: 14px 30px;
   color: white;
   background: #a500d9;
@@ -101,11 +131,15 @@
 
 .game-over-panel {
   position: absolute;
-  inset: 70px 20px 65px;
+  inset: 0;
+  z-index: 30;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 2px;
+  padding: 16px;
+  box-sizing: border-box;
   background: #080516ef;
   backdrop-filter: blur(12px);
   border-radius: 8px;
@@ -128,6 +162,7 @@
 .game-over-panel p {
   color: #00eaff;
   letter-spacing: 3px;
+  margin: 5px 0;
 }
 
 .game-over-panel button {
@@ -149,37 +184,89 @@
 
 @media (max-width: 650px) {
   .game-screen {
-    padding: 15px 10px;
+    padding: 8px 6px;
+    gap: 8px;
   }
 
   .game-header {
-    margin-bottom: 30px;
+    min-height: 48px;
+    gap: 6px;
   }
 
   .game-stats {
-    gap: 12px;
-    font-size: 10px;
+    gap: 7px 10px;
+    font-size: 9px;
+    letter-spacing: 0.5px;
   }
 
   .game-exit {
-    padding: 10px;
+    padding: 9px 10px;
     font-size: 10px;
+    letter-spacing: 1px;
   }
 
   .game-container {
-    padding: 10px;
+    padding: 6px;
+    gap: 6px;
   }
 
   .game-title span {
-    font-size: 20px;
+    font-size: 17px;
+    letter-spacing: 5px;
+  }
+
+  .game-title p {
+    font-size: 7px;
+    letter-spacing: 2px;
   }
 
   .game-controls {
+    min-height: 38px;
     font-size: 8px;
-    letter-spacing: 1px;
+    letter-spacing: 0.5px;
   }
 
   .game-controls button {
     display: block;
+    padding: 10px 20px;
+  }
+}
+
+@media (max-height: 520px) {
+  .game-screen {
+    padding-top: 6px;
+    padding-bottom: 6px;
+    gap: 5px;
+  }
+
+  .game-header {
+    min-height: 40px;
+  }
+
+  .game-container {
+    padding: 5px;
+    gap: 4px;
+  }
+
+  .game-title span {
+    font-size: 16px;
+  }
+
+  .game-title p {
+    display: none;
+  }
+
+  .game-controls {
+    min-height: 26px;
+  }
+}
+
+@media (max-width: 650px) {
+  .game-canvas {
+    width: 100%;
+    height: auto;
+    max-height: 42vh;
+    aspect-ratio: 9 / 5;
+    align-self: center;
   }
 }
