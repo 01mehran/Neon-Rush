@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { playSound } from "./audio";
 
 const WIDTH = 900;
 const HEIGHT = 500;
@@ -94,6 +95,7 @@ function GameScreen({ onExit }: { onExit: () => void }) {
 
     current.player.velocityY = -680;
     current.player.grounded = false;
+    playSound("jump");
   }, []);
 
   const togglePause = useCallback(() => {
@@ -596,6 +598,7 @@ function GameScreen({ onExit }: { onExit: () => void }) {
               current.magnetTime = 6;
               burst(powerUp.x, powerUp.y, "#ff4de1", 22);
             }
+            playSound("powerup");
             powerUp.x = -100;
           }
         }
@@ -623,6 +626,7 @@ function GameScreen({ onExit }: { onExit: () => void }) {
               34,
             );
             current.screenShake = 1;
+            playSound("gameOver");
             current.running = false;
             current.gameOver = true;
             current.paused = false;
@@ -641,6 +645,7 @@ function GameScreen({ onExit }: { onExit: () => void }) {
             coin.collected = true;
             current.coinsCollected += 1;
             burst(coin.x, coin.y, "#ffe65c", 10);
+            playSound("coin");
           }
         }
 
