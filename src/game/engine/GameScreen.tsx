@@ -32,6 +32,17 @@ type PowerUp = {
   type: "shield" | "magnet";
 };
 
+type Particle = {
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  life: number;
+  maxLife: number;
+  size: number;
+  color: string;
+};
+
 function GameScreen({ onExit }: { onExit: () => void }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -59,6 +70,8 @@ function GameScreen({ onExit }: { onExit: () => void }) {
     obstacles: [] as Obstacle[],
     coins: [] as Coin[],
     powerUps: [] as PowerUp[],
+    particles: [] as Particle[],
+    screenShake: 0,
     powerUpTimer: 7,
     shieldTime: 0,
     magnetTime: 0,
@@ -105,6 +118,8 @@ function GameScreen({ onExit }: { onExit: () => void }) {
       obstacles: [],
       coins: [],
       powerUps: [],
+      particles: [],
+      screenShake: 0,
       powerUpTimer: 7,
       shieldTime: 0,
       magnetTime: 0,
@@ -137,6 +152,25 @@ function GameScreen({ onExit }: { onExit: () => void }) {
     let animationId = 0;
     let previousTime = 0;
     let uiTimer = 0;
+
+    const burst = (x: number, y: number, color: string, amount = 14) => {
+      const current = game.current;
+      for (let i = 0; i < amount; i++) {
+        const angle = (Math.PI * 2 * i) / amount + Math.random() * 0.35;
+        const speed = 55 + Math.random() * 190;
+        const life = 0.35 + Math.random() * 0.45;
+        current.particles.push({
+          x,
+          y,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed,
+          life,
+          maxLife: life,
+          size: 2 + Math.random() * 4,
+          color,
+        });
+      }
+    };
 
     const drawBackground = (distance: number) => {
       const gradient = ctx.createLinearGradient(0, 0, 0, HEIGHT);
@@ -337,6 +371,15 @@ function GameScreen({ onExit }: { onExit: () => void }) {
       const current = game.current;
       const player = current.player;
 
+      ctx.save();
+      if (current.screenShake > 0) {
+        const shake = current.screenShake * 13;
+        ctx.translate(
+          (Math.random() - 0.5) * shake,
+          (Math.random() - 0.5) * shake,
+        );
+      }
+
       drawBackground(current.distance);
 
       current.coins.forEach(drawCoin);
@@ -345,6 +388,7 @@ function GameScreen({ onExit }: { onExit: () => void }) {
 
       if (current.shieldTime > 0) {
         ctx.save();
+        const pulse = 1 + Math.sin(performance.now() / 110) * 0.045;
         ctx.strokeStyle = "#00eaff";
         ctx.lineWidth = 3;
         ctx.shadowBlur = 24;
@@ -353,8 +397,8 @@ function GameScreen({ onExit }: { onExit: () => void }) {
         ctx.ellipse(
           player.x + player.width / 2,
           player.y + player.height / 2,
-          player.width * 0.9,
-          player.height * 0.72,
+          player.width * 0.9 * pulse,
+          player.height * 0.72 * pulse,
           0,
           0,
           Math.PI * 2,
@@ -363,7 +407,39 @@ function GameScreen({ onExit }: { onExit: () => void }) {
         ctx.restore();
       }
 
+      if (current.magnetTime > 0) {
+        ctx.save();
+        ctx.strokeStyle = "#ff4de1";
+        ctx.globalAlpha = 0.45 + Math.sin(performance.now() / 130) * 0.2;
+        ctx.lineWidth = 2;
+        ctx.shadowColor = "#ff4de1";
+        ctx.shadowBlur = 20;
+        ctx.beginPath();
+        ctx.arc(
+          player.x + player.width / 2,
+          player.y + player.height / 2,
+          58 + Math.sin(performance.now() / 180) * 5,
+          0,
+          Math.PI * 2,
+        );
+        ctx.stroke();
+        ctx.restore();
+      }
+
       drawPlayer(player.x, player.y, player.width, player.height);
+
+      // Neon particle effects
+      current.particles.forEach((particle) => {
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, particle.life / particle.maxLife);
+        ctx.fillStyle = particle.color;
+        ctx.shadowColor = particle.color;
+        ctx.shadowBlur = 16;
+        ctx.beginPath();
+        ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      });
 
       // Score display
       ctx.fillStyle = "#ffffff";
@@ -397,6 +473,7 @@ function GameScreen({ onExit }: { onExit: () => void }) {
 
         ctx.textAlign = "left";
       }
+      ctx.restore();
     };
 
     const loop = (time: number) => {
@@ -512,8 +589,13 @@ function GameScreen({ onExit }: { onExit: () => void }) {
           const dx = player.x + player.width / 2 - powerUp.x;
           const dy = player.y + player.height / 2 - powerUp.y;
           if (Math.hypot(dx, dy) < 42) {
-            if (powerUp.type === "shield") current.shieldTime = 5;
-            else current.magnetTime = 6;
+            if (powerUp.type === "shield") {
+              current.shieldTime = 5;
+              burst(powerUp.x, powerUp.y, "#00eaff", 22);
+            } else {
+              current.magnetTime = 6;
+              burst(powerUp.x, powerUp.y, "#ff4de1", 22);
+            }
             powerUp.x = -100;
           }
         }
@@ -534,6 +616,13 @@ function GameScreen({ onExit }: { onExit: () => void }) {
             playerBottom > obstacleTop + 3;
 
           if (hit && current.shieldTime <= 0) {
+            burst(
+              player.x + player.width / 2,
+              player.y + player.height / 2,
+              "#ff29df",
+              34,
+            );
+            current.screenShake = 1;
             current.running = false;
             current.gameOver = true;
             current.paused = false;
@@ -551,6 +640,7 @@ function GameScreen({ onExit }: { onExit: () => void }) {
           if (Math.sqrt(dx * dx + dy * dy) < 35) {
             coin.collected = true;
             current.coinsCollected += 1;
+            burst(coin.x, coin.y, "#ffe65c", 10);
           }
         }
 
@@ -579,6 +669,21 @@ function GameScreen({ onExit }: { onExit: () => void }) {
 
           uiTimer = 0;
         }
+      }
+
+      // Keep visual effects animating after a collision; freeze them while paused.
+      if (!current.paused) {
+        current.particles.forEach((particle) => {
+          particle.x += particle.vx * delta;
+          particle.y += particle.vy * delta;
+          particle.vx *= Math.pow(0.08, delta);
+          particle.vy = particle.vy * Math.pow(0.08, delta) + 90 * delta;
+          particle.life -= delta;
+        });
+        current.particles = current.particles.filter(
+          (particle) => particle.life > 0,
+        );
+        current.screenShake = Math.max(0, current.screenShake - delta * 2.8);
       }
 
       draw();
@@ -690,7 +795,7 @@ function GameScreen({ onExit }: { onExit: () => void }) {
         )}
 
         <div className="game-controls">
-          <span>SPACE / ↑ / W TO JUMP · COLLECT S / M ORBS</span>
+          <span>SPACE / ↑ / W TO JUMP · COLLECT NEON ORBS</span>
           <button
             onPointerDown={(e) => {
               e.preventDefault();
